@@ -76,13 +76,14 @@ function InitCharts() {
           sampleValues.slice(6,7)*30,sampleValues.slice(7,8)*30,sampleValues.slice(8,9)*30];
         
         var Bubbletrace = {
-          x: otuIds.slice(0,9),
-          y: sampleValues.slice(0,9),
+          x: otuIds,
+          y: sampleValues,
+          text: otuLabels,
           mode: 'markers',
           marker: {
-            size: Bubblesize ,
+            size: sampleValues ,
             // sizeref: 2.0 * Math.max(...Bubblesize) / (desired_maximum_marker_size**2),
-            sizemode: 'area',
+            // sizemode: 'area',
             color: ['Brown','Red','Orange','Yellow','Green','Cyan','Blue','Indigo','Violet']
           },
 
@@ -92,11 +93,14 @@ function InitCharts() {
         
         var Bubblelayout = {
           title: 'Marker Size',
-          showlegend: false,
-          height: 750,
-          width: 1200,
+          margin: {t:0 },
+          
+          
           xaxis: { title: "Otu Ids"},
-          yaxis: {title: "Sample Values"}
+          margin : {t: 30},
+          yaxis: {title: "Sample Values"},
+          hovermode: 'closest'
+          
 
         };
         
@@ -107,7 +111,7 @@ function InitCharts() {
 
 }
 
-function optionChanged() {
+function optionChanged(DropdownId) {
   // Prevent the page from refreshing
   // d3.event.preventDefault();
 
@@ -115,72 +119,103 @@ function optionChanged() {
  
     var OtuId = d3.select("#selDataset").node().value;
     var subjectNames = data.names;
-     
-    console.log("otuid: " + OtuId);
+    var sampleValues = data.samples;
+    var filteredSamples = sampleValues.filter(element => element.id === DropdownId)[0];
 
     var index = subjectNames.indexOf(OtuId);
+    // var bigbox = d3.select("#sample-metadata"); 
+    // bigbox.html("");
+    // Object.entries(filteredSamples).forEach(([key, value] )=> 
+    // {bigbox.append("h6").text(`${key}: ${value}`)});
+
     var metadata = data.metadata[index];
-    // if (subjectNames[index] === OtuId) console.log("OtuIds are equal and index = " + index);
+    
     var i = 0;
     var pair;
+    // Change metadata
     for (const [key, value] of Object.entries(metadata)) {
-      console.log(`${key}: ${value}`);
+      // console.log(`${key}: ${value}`);
       pair = `${key}: ${value}`;
       d3.select("#metadata"+i).text("");
       d3.select("#metadata"+i).text(pair);
        
       i++;
     }
+
+
+    var BarTrace = {
+      x: filteredSamples.sample_values,
+      y: filteredSamples.otu_ids,
+      type: "bar",
+      orientation: 'h',
+      text: filteredSamples.otu_labels,
+       
+    };
+    
+    var BarData = [BarTrace];
+    
+    var BarLayout = {
+      title: "Belly Buttons",
+      xaxis: { title: "Otu Ids"},
+      yaxis: 
+      { title: "Sample Values",
+        gridwidth: 2  },
+      width: 600,
+      height: 600,
+      config: {
+        responsive: true
+      },
+      hoverlabel: {
+        align: "right"
+      }
+      
+    };
+    
+    Plotly.newPlot("bar", BarData, BarLayout, {bargap:100});
+
+
+    var Bubbletrace = {
+      x: filteredSamples.otu_ids,
+      y: filteredSamples.sample_values,
+      text: filteredSamples.otu_labels,
+      mode: 'markers',
+      marker: {
+        size: filteredSamples.sample_values ,
+        // sizeref: 2.0 * Math.max(...Bubblesize) / (desired_maximum_marker_size**2),
+        // sizemode: 'area',
+        color: ['Brown','Red','Orange','Yellow','Green','Cyan','Blue','Indigo','Violet']
+      },
+
+    };
+    
+    var Bubbledata = [Bubbletrace];
+    
+    var Bubblelayout = {
+      title: 'Marker Size',
+      margin: {t:0 },
+      
+      
+      xaxis: { title: "Otu Ids"},
+      margin : {t: 30},
+      yaxis: {title: "Sample Values"},
+      hovermode: 'closest'
+      
+
+    };
+    
+    Plotly.newPlot('bubble', Bubbledata, Bubblelayout);
+
+
+
+
      
-    changeGraphs(OtuId);
   })
-   
-   
- 
 }
 
  
-function changeGraphs(OtuId) {
-  
-  var id = OtuId;
-
-  d3.json("samples.json").then(function(data) {
-    var subjectNames = Object.values(data.names);
-    console.log("changeGraphs Otuid = " + id);
-    var index = subjectNames.indexOf(id);
-    var indexArray = [];
-    var size = subjectNames.length-1;
-    var LessThan = index - 10;
-    var GreaterThan = index + 10;
-    
-    if ((~LessThan < 0 && GreaterThan < size)) {
-      indexArray.push(subjectNames.slice(index, GreaterThan));
-    }
-    else if (LessThan < 0) {
-      indexArray.push(subjectNames.slice(index, GreaterThan));
-    }
-    else if (GreaterThan - size < 10) {
-      indexArray.push(subjectNames.slice(index - (GreaterThan - size), size+1));
-    }
-    else {
-      indexArray.push(subjectNames.slice(index, size+1));
-    }
-    
-    // console.log("size = " + size)
-    // console.log("index = " + index);
-    // console.log("GreaterThan = " +  GreaterThan);
-    // console.log("LessThan = " +  LessThan);
-    
-    // console.log("indexArray = " + indexArray);
-
-    
-     
-  })
-}
-
-
-
 
 
 InitCharts();
+
+ 
  
